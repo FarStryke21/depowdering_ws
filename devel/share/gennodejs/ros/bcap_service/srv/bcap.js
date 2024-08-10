@@ -1,1 +1,0 @@
-/home/aman/depowdering_ws/devel/.private/bcap_service/share/gennodejs/ros/bcap_service/srv/bcap.js
