@@ -1,4 +1,0 @@
-[35m[1mScanning dependencies of target get_joint_solution[0m
-[ 50%] [32mBuilding CXX object CMakeFiles/get_joint_solution.dir/src/get_joint_solution.cpp.o[0m
-[100%] [32m[1mLinking CXX executable /home/aman/depowdering_ws/devel/.private/add_post_pro_control/lib/add_post_pro_control/get_joint_solution[0m
-[100%] Built target get_joint_solution
