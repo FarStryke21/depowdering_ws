@@ -1,2 +1,0 @@
-add_post_pro2/denso_robot_ros/denso_robot_ros
-/home/aman/depowdering_ws/devel/.private/denso_robot_ros/cmake.lock /home/aman/depowdering_ws/devel/./cmake.lock
