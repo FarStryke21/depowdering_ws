@@ -1,0 +1,1 @@
+/home/aman/depowdering_ws/devel/.private/add_post_pro_simulation/share/roseus/ros/add_post_pro_simulation/manifest.l

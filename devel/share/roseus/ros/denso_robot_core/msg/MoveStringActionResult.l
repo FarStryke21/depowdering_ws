@@ -1,0 +1,1 @@
+/home/aman/depowdering_ws/devel/.private/denso_robot_core/share/roseus/ros/denso_robot_core/msg/MoveStringActionResult.l
