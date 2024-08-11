@@ -36,8 +36,9 @@
     </include>
 
     <!-- Load the URDF, SRDF and other .yaml configuration files on the param server -->
-    <param name="robot_description" command="xacro  '$(find add_post_pro_simulation)/urdf/add_post_pro_robot.urdf.xacro'" />
-
+    <!-- <param name="robot_description" command="xacro  '$(find add_post_pro_simulation)/urdf/depowdering_gripper_robot.urdf.xacro'" /> -->
+    <param name="robot_description" command="xacro $(find depowdering_aman)/urdf/depowdering_gripper_robot.xacro"/>
+    
     <node name="spawn_the_robot" pkg="gazebo_ros" type="spawn_model"  output="screen" args="-urdf -param robot_description -model $(arg robot_name) -x $(arg x) -y $(arg y) -z $(arg z)" />
 
 

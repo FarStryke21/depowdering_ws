@@ -3,6 +3,7 @@
 
     <arg name="world_path" default="$(find add_post_pro_simulation)/world/add_post_pro.world"/>
     <arg name="config_name" default="$(find add_post_pro_bringup)/rviz/add_post_pro_default.rviz"/>
+    
     <arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.096"/>
@@ -49,8 +50,7 @@
 
     <!-- Create a link for the powder box -> Update the urdf later to define this insternally -->
     <node name="powder_box_spawn" pkg="add_post_pro_simulation" type="generate_pickup_box.py" output="screen" />
-    <!-- Spawn the collis
-    .ion object in the planning scene -->
+    <!-- Spawn the collision object in the planning scene -->
     <include file="$(find add_post_pro_simulation)/launch/add_object_in_planning_scene_gripper.launch" />
 
 </launch>

@@ -3,6 +3,10 @@
 <robot
   name="wire_gripper">
  <!--########### adding the gripper ########### -->
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/</robotNamespace>
+    <controlPeriod>0.01</controlPeriod> <!-- Control loop period in seconds -->
+  </plugin>
 
   <link
     name="gripper_base_link">
@@ -114,5 +118,19 @@
       effort="0"
       velocity="0" />
   </joint>
+
+<!--########### adding transmissions ########### -->
+
+  <transmission
+    name="trans_gripper">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="gripper_Joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_gripper">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
 <!--########### end of adding the gripper ########### -->
 </robot>
