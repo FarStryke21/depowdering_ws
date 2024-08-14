@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="add_post_pro_depowdering">
 
-  <!-- Include the robot xacro file -->
-  <xacro:include filename="$(find denso_robot_descriptions)/vs6577_description/urdf/vs6577.transmission.xacro"/>
+	<!-- Include the robot xacro file -->
+	<xacro:include filename="$(find denso_robot_descriptions)/vs6577_description/urdf/vs6577.transmission.xacro"/>
 
 	<gazebo>
         <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
@@ -156,27 +156,28 @@
 		<material>Gazebo/CoM</material>
 	</gazebo>
 	<gazebo reference="J1">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 	<gazebo reference="J2">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 	<gazebo reference="J3">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 	<gazebo reference="J4">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 	<gazebo reference="J5">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 	<gazebo reference="J6">
-		<material>Gazebo/Gray</material>
+		<material>Gazebo/White</material>
 	</gazebo>
 
 	<gazebo>
 		<gravity>False</gravity>
 	</gazebo>
+
 	<joint name="joint_1" type="revolute">
 		<parent link="base_link"/>
 		<child link="J1"/>
@@ -294,7 +295,7 @@
 	<joint name="gripper_base_Joint" type="fixed">
 		<origin xyz="0 0 0.004" rpy="0 0 3.14" />
 		<parent link="J6" />
-		<child  link="gripper_base_link" />
+		<child link="gripper_base_link" />
 		<axis xyz="0 0 -1" />
 	</joint>
 
@@ -303,8 +304,16 @@
 		<parent link="gripper_base_link" />
 		<child link="gripper_Link" />
 		<axis xyz="0 0 -1" />
-		<limit lower="0" upper="0.021" effort="0" velocity="0" />
+		<limit lower="0" upper="0.021" effort="1" velocity="1" />
 	</joint>
+
+	<gazebo reference="gripper_base_link">
+		<material>Gazebo/Gray</material>
+	</gazebo>
+
+	<gazebo reference="gripper_Link">
+		<material>Gazebo/Gray</material>
+	</gazebo>
 
 	<!--########### adding transmissions ########### -->
 	<!-- <transmission
@@ -319,14 +328,13 @@
 		</actuator>
 	</transmission> -->
 
-	<transmission
-		name="trans_gripper">
+	<transmission name="trans_gripper">
 		<type>transmission_interface/SimpleTransmission</type>
 		<joint name="gripper_Joint">
-			<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 		</joint>
 		<actuator name="motor_gripper">
-			<hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+			<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 			<mechanicalReduction>1</mechanicalReduction>
 		</actuator>
 	</transmission>

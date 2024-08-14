@@ -47,7 +47,7 @@ add_post_pro_depowdering:
 
   gripper_controller:
     state_publish_rate: 50
-    type: position_controllers/JointTrajectoryController
+    type: effort_controllers/JointTrajectoryController
     joints:
       - gripper_Joint
     gains:

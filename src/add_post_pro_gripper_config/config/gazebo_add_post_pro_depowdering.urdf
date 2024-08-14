@@ -67,10 +67,10 @@
     <transmission name="trans_gripper_Joint">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="gripper_Joint">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         </joint>
         <actuator name="gripper_Joint_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
             <mechanicalReduction>1</mechanicalReduction>
         </actuator>
     </transmission>
@@ -222,22 +222,22 @@
         <material>Gazebo/CoM</material>
     </gazebo>
     <gazebo reference="J1">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="J2">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="J3">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="J4">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="J5">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo reference="J6">
-        <material>Gazebo/Gray</material>
+        <material>Gazebo/White</material>
     </gazebo>
     <gazebo>
         <gravity>False</gravity>
@@ -313,6 +313,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_Link">
         <inertial>
             <origin rpy="0 0 0" xyz="-0.0195 0.00014702 0.002743" />
@@ -335,19 +336,28 @@
             </geometry>
         </collision>
     </link>
+
     <joint name="gripper_base_Joint" type="fixed">
         <origin rpy="0 0 3.14" xyz="0 0 0.004" />
         <parent link="J6" />
         <child link="gripper_base_link" />
         <axis xyz="0 0 -1" />
     </joint>
+
     <joint name="gripper_Joint" type="prismatic">
         <origin rpy="0 0 0.0" xyz="0 0 0.02565" />
         <parent link="gripper_base_link" />
         <child link="gripper_Link" />
         <axis xyz="0 0 -1" />
-        <limit effort="0" lower="0" upper="0.021" velocity="1" effort="10" />
+        <limit effort="1" lower="0" upper="0.021" velocity="1" />
     </joint>
+
+    <gazebo reference="gripper_base_link">
+		<material>Gazebo/Gray</material>
+	</gazebo>
+	<gazebo reference="gripper_Link">
+		<material>Gazebo/Gray</material>
+	</gazebo>
     <!--########### end of adding the gripper ########### -->
     
     
