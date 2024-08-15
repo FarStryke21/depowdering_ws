@@ -7,11 +7,9 @@ Panels:
         - /MotionPlanning1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Metrics1
+        - /MotionPlanning1/Planned Path1
         - /TF1
         - /TF1/Frames1
-        - /TF1/Frames1/J61
-        - /TF1/Frames1/J61/Position1
-        - /TF1/Frames1/J61/Orientation1
       Splitter Ratio: 0.5
     Tree Height: 379
   - Class: rviz/Help
@@ -131,7 +129,7 @@ Visualization Manager:
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
         Show Robot Collision: false
-        Show Robot Visual: true
+        Show Robot Visual: false
         Show Trail: false
         State Display Time: 0.05 s
         Trail Step Size: 1
@@ -294,7 +292,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.113736152648926
+      Distance: 2.0532989501953125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -302,17 +300,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.75
       Focal Point:
-        X: -0.11982657015323639
-        Y: 0.3690378665924072
-        Z: 0.381712406873703
+        X: -0.2815389037132263
+        Y: 0.1648401916027069
+        Z: 0.23547470569610596
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.45500025153160095
+      Pitch: 0.18500041961669922
       Target Frame: world
-      Yaw: 4.868117809295654
+      Yaw: 5.508118629455566
     Saved: ~
 Window Geometry:
   Displays:

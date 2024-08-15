@@ -11,6 +11,7 @@ import geometry_msgs.msg
 from geometry_msgs.msg import PoseStamped, TransformStamped
 import tf2_ros
 import tf2_geometry_msgs
+import tf.transformations as tft
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs import point_cloud2
 import std_msgs
@@ -87,7 +88,7 @@ def delete_model(model_name):
     except rospy.ServiceException as e:
         rospy.logerr(f"Service call failed: {e}")
 
-def motion_planner(object_id = 0, pick_pose=None, target_pose=None, arm_group=None, gripper_group=None):
+def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, target_pose=None, arm_group=None, gripper_group=None):
     arm_group.set_start_state_to_current_state()
     gripper_group.set_start_state_to_current_state()
 
@@ -116,6 +117,16 @@ def motion_planner(object_id = 0, pick_pose=None, target_pose=None, arm_group=No
     gripper_group.stop()
     gripper_group.clear_pose_targets()
     attach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
+    touch_links = robot.get_link_names()
+    scene.attach_cylinder("J6", f"part_{object_id}", touch_links=touch_links)
+
+    # Set the target pose for the end effector
+    rospy.loginfo("Moving to Post Grasp Pose")
+    pick_pose.pose.position.z = object_at + 0.3
+    arm_group.set_pose_target(pick_pose)
+    arm_group.go(wait=True) 
+    arm_group.stop()
+    arm_group.clear_pose_targets()
 
     # Waypoint
     arm_group.set_named_target("rest")
@@ -146,8 +157,8 @@ def motion_planner(object_id = 0, pick_pose=None, target_pose=None, arm_group=No
     arm_group.clear_pose_targets()
 
     delete_model(f"cylinder_{object_id}")
-
-
+    scene.remove_attached_object("J6", name=f"part_{object_id}")
+    scene.remove_world_object(f"part_{object_id}")
 
 def motion_commander(cylinder_pose):
     # Initialize the moveit_commander
@@ -185,12 +196,26 @@ def motion_commander(cylinder_pose):
         pose.pose.position.y = p[1]
         pose.pose.position.z = p[2]
 
-        pose = transform_pose(pose, "powder_box", "world")
+        # Create a rotation matrix that points Z-axis downward
+        rotation_matrix = np.array([
+        [1, 0, 0],
+        [0, -1, 0],
+        [0, 0, -1]
+        ])
 
-        pose.pose.orientation.x = 0.0
-        pose.pose.orientation.y = 1.0
-        pose.pose.orientation.z = 0.0
-        pose.pose.orientation.w = 0.0
+        # Create a 4x4 transformation matrix
+        transform_matrix = np.eye(4)
+        transform_matrix[:3, :3] = rotation_matrix
+
+        # Convert rotation matrix to quaternion
+        quaternion = tft.quaternion_from_matrix(transform_matrix)
+
+        pose.pose.orientation.x = quaternion[0]
+        pose.pose.orientation.y = quaternion[1]
+        pose.pose.orientation.z = quaternion[2]
+        pose.pose.orientation.w = quaternion[3]
+
+        pose = transform_pose(pose, "powder_box", "world")
 
         target_pose = PoseStamped()
         target_pose.header.frame_id = "world"
@@ -202,7 +227,7 @@ def motion_commander(cylinder_pose):
         target_pose.pose.orientation.z = 0.0
         target_pose.pose.orientation.w = 0.0
 
-        motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group)
+        motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group, scene=scene, robot=robot)  
 
     # Stop the moveit_commander
     moveit_commander.roscpp_shutdown()
