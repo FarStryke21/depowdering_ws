@@ -74,32 +74,53 @@ def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_gro
     gripper_group.set_start_state_to_current_state()
 
     # Pre grasp pose
-    pick_pose.pose.position.z = 0.25
+    object_at = pick_pose.pose.position.z
+    pick_pose.pose.position.z = object_at + 0.4
     # Set the target pose for the end effector
+    rospy.loginfo("Moving to Pre Grasp Pose")
     arm_group.set_pose_target(pick_pose)
     arm_group.go(wait=True) 
     arm_group.stop()
     arm_group.clear_pose_targets()
 
+    input("Press Enter to attach object")
+    # Grasp Pose
+    rospy.loginfo("Moving to Grasp Pose")
+    pick_pose.pose.position.z = object_at + 0.25
+    arm_group.set_pose_target(pick_pose)
+    arm_group.go(wait=True)
+    arm_group.stop()
+    arm_group.clear_pose_targets()
+
     # Close the gripper
+    rospy.loginfo("Closing Gripper")
     gripper_group.set_named_target("pick")
     gripper_group.go(wait=True)
     gripper_group.stop()
     gripper_group.clear_pose_targets()
 
+    # Waypoint
+    arm_group.set_named_target("rest")
+    arm_group.go(wait=True)
+    arm_group.stop()
+    arm_group.clear_pose_targets()
+
     # Set the target pose for the end effector
+    rospy.loginfo("Moving to Target Pose")
     arm_group.set_pose_target(target_pose)
     arm_group.go(wait=True)
     arm_group.stop()
     arm_group.clear_pose_targets()
 
     # Open the gripper
+    rospy.loginfo("Opening Gripper")
     gripper_group.set_named_target("release")
     gripper_group.go(wait=True)
     gripper_group.stop()
     gripper_group.clear_pose_targets()
 
     # Return to the ready position
+
     arm_group.set_named_target("rest")
     arm_group.go(wait=True)
     arm_group.stop()
@@ -123,8 +144,6 @@ def motion_commander(cylinder_pose):
 
     # Set the reference frame for the arm group
     arm_group.set_pose_reference_frame("base_link")
-
-    # Set the reference frame for the gripper group
     gripper_group.set_pose_reference_frame("base_link")
 
     rospy.loginfo("Enter Ready Position")
@@ -143,28 +162,28 @@ def motion_commander(cylinder_pose):
         pose.pose.position.x = p[0]
         pose.pose.position.y = p[1]
         pose.pose.position.z = p[2]
-        pose.pose.orientation.x = 0.707
-        pose.pose.orientation.y = 0.707
-        pose.pose.orientation.z = 0
-        pose.pose.orientation.w = 0
 
         pose = transform_pose(pose, "powder_box", "world")
 
+        pose.pose.orientation.x = 0.0
+        pose.pose.orientation.y = 1.0
+        pose.pose.orientation.z = 0.0
+        pose.pose.orientation.w = 0.0
+
         target_pose = PoseStamped()
-        target_pose.header.frame_id = "base_link"
-        target_pose.pose.position.x = 0.5
-        target_pose.pose.position.y = 0.0
-        target_pose.pose.position.z = 0.5
+        target_pose.header.frame_id = "world"
+        target_pose.pose.position.x = 0.0
+        target_pose.pose.position.y = 0.3
+        target_pose.pose.position.z = 0.3
         target_pose.pose.orientation.x = 0.0
-        target_pose.pose.orientation.y = 0.0
+        target_pose.pose.orientation.y = 1.0
         target_pose.pose.orientation.z = 0.0
-        target_pose.pose.orientation.w = 1.0
+        target_pose.pose.orientation.w = 0.0
 
         print(pose)
+        input("Start Motion...")
 
         motion_planner(pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group)
-
-
 
 if __name__ == "__main__":
     # setup a global variable to trigger the callback
