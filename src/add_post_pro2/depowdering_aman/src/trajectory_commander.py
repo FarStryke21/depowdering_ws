@@ -17,6 +17,8 @@ import std_msgs
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
 import sys
 import pandas as pd
+from gazebo_msgs.srv import DeleteModel
+from gazebo_msgs.srv import DeleteModelRequest
 
 def transform_pose(input_pose, from_frame, to_frame):
     tf_buffer = tf2_ros.Buffer()
@@ -31,7 +33,7 @@ def transform_pose(input_pose, from_frame, to_frame):
         return None
 
 
-def attach_object(model1 = "ur5", link1 = "wrist_3_link", model2 = "blue_cylinder", link2 = "link_0"):
+def attach_object(model1 = "add_post_pro_depowdering", link1 = "gripper_Link", model2 = "cylinder_0", link2 = "link"):
     rospy.wait_for_service('/link_attacher_node/attach')
     
     try:
@@ -50,8 +52,9 @@ def attach_object(model1 = "ur5", link1 = "wrist_3_link", model2 = "blue_cylinde
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
 
-def detach_object(model1 = "ur5", link1 = "wrist_3_link", model2 = "blue_cylinder", link2 = "link_0"):
+def detach_object(model1 = "add_post_pro_depowdering", link1 = "gripper_Link", model2 = "cylinder_0", link2 = "link"):
     rospy.wait_for_service('/link_attacher_node/detach')
+    rospy.wait_for_service('/gazebo/delete_model')
     
     try:
         detach_srv = rospy.ServiceProxy('/link_attacher_node/detach', Attach)
@@ -64,18 +67,33 @@ def detach_object(model1 = "ur5", link1 = "wrist_3_link", model2 = "blue_cylinde
         resp = detach_srv.call(req)
         if resp.ok:
             rospy.loginfo("Successfully detached object from gripper")
+
         else:
             rospy.logerr("Failed to detach object")
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s" % e)
 
-def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_group=None):
+def delete_model(model_name):
+    rospy.wait_for_service('/gazebo/delete_model')
+    try:
+        delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
+        req = DeleteModelRequest()
+        req.model_name = model_name
+        resp = delete_model(req)
+        if resp.success:
+            rospy.loginfo(f"Successfully deleted {model_name}")
+        else:
+            rospy.logerr(f"Failed to delete {model_name}")
+    except rospy.ServiceException as e:
+        rospy.logerr(f"Service call failed: {e}")
+
+def motion_planner(object_id = 0, pick_pose=None, target_pose=None, arm_group=None, gripper_group=None):
     arm_group.set_start_state_to_current_state()
     gripper_group.set_start_state_to_current_state()
 
     # Pre grasp pose
     object_at = pick_pose.pose.position.z
-    pick_pose.pose.position.z = object_at + 0.4
+    pick_pose.pose.position.z = object_at + 0.3
     # Set the target pose for the end effector
     rospy.loginfo("Moving to Pre Grasp Pose")
     arm_group.set_pose_target(pick_pose)
@@ -83,10 +101,9 @@ def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_gro
     arm_group.stop()
     arm_group.clear_pose_targets()
 
-    input("Press Enter to attach object")
     # Grasp Pose
     rospy.loginfo("Moving to Grasp Pose")
-    pick_pose.pose.position.z = object_at + 0.25
+    pick_pose.pose.position.z = object_at + 0.18
     arm_group.set_pose_target(pick_pose)
     arm_group.go(wait=True)
     arm_group.stop()
@@ -98,6 +115,7 @@ def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_gro
     gripper_group.go(wait=True)
     gripper_group.stop()
     gripper_group.clear_pose_targets()
+    attach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
 
     # Waypoint
     arm_group.set_named_target("rest")
@@ -114,6 +132,7 @@ def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_gro
 
     # Open the gripper
     rospy.loginfo("Opening Gripper")
+    detach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
     gripper_group.set_named_target("release")
     gripper_group.go(wait=True)
     gripper_group.stop()
@@ -125,6 +144,8 @@ def motion_planner(pick_pose=None, target_pose=None, arm_group=None, gripper_gro
     arm_group.go(wait=True)
     arm_group.stop()
     arm_group.clear_pose_targets()
+
+    delete_model(f"cylinder_{object_id}")
 
 
 
@@ -155,8 +176,9 @@ def motion_commander(cylinder_pose):
     gripper_group.go(wait=True)
     gripper_group.stop()
     gripper_group.clear_pose_targets()
+    input("Start Motion...")
 
-    for p in cylinder_pose:
+    for idx, p in enumerate(cylinder_pose, 1):
         pose = PoseStamped()
         pose.header.frame_id = "powder_box"
         pose.pose.position.x = p[0]
@@ -174,16 +196,17 @@ def motion_commander(cylinder_pose):
         target_pose.header.frame_id = "world"
         target_pose.pose.position.x = 0.0
         target_pose.pose.position.y = 0.3
-        target_pose.pose.position.z = 0.3
+        target_pose.pose.position.z = 0.5
         target_pose.pose.orientation.x = 0.0
         target_pose.pose.orientation.y = 1.0
         target_pose.pose.orientation.z = 0.0
         target_pose.pose.orientation.w = 0.0
 
-        print(pose)
-        input("Start Motion...")
+        motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group)
 
-        motion_planner(pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group)
+    # Stop the moveit_commander
+    moveit_commander.roscpp_shutdown()
+
 
 if __name__ == "__main__":
     # setup a global variable to trigger the callback
