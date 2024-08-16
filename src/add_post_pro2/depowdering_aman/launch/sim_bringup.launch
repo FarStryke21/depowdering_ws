@@ -52,9 +52,10 @@
         <arg name="rviz_config" value="$(find add_post_pro_gripper_config)/launch/moveit.rviz" />
     </include>
 
+
+
     <!-- Setup Planning Scene and Spawn Objects -->
     <node name="powder_box_spawn" pkg="depowdering_aman" type="generate_pickup_box.py"                  output="screen"/> 
     <node name="setup_rviz_scene" pkg="depowdering_aman" type="add_object_in_planning_gripper_scene.py" output="screen"/> 
-    <node name="spawn_objects"    pkg="depowdering_aman" type="generate_spawn_objects.py"               output="screen"/>
-
+    
 </launch>

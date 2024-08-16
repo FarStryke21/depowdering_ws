@@ -1,25 +1,18 @@
 #!/usr/bin/env python
 
 import rospy
-from sensor_msgs.msg import PointCloud2, PointField
-import sensor_msgs.point_cloud2 as pc2
 import numpy as np
-import open3d as o3d
 import moveit_commander
-import moveit_msgs.msg
-import geometry_msgs.msg
-from geometry_msgs.msg import PoseStamped, TransformStamped
+from geometry_msgs.msg import PoseStamped
 import tf2_ros
 import tf2_geometry_msgs
 import tf.transformations as tft
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
-from sensor_msgs import point_cloud2
-import std_msgs
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
 import sys
 import pandas as pd
 from gazebo_msgs.srv import DeleteModel
 from gazebo_msgs.srv import DeleteModelRequest
+
 
 def transform_pose(input_pose, from_frame, to_frame):
     tf_buffer = tf2_ros.Buffer()
@@ -92,6 +85,12 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
     arm_group.set_start_state_to_current_state()
     gripper_group.set_start_state_to_current_state()
 
+    # Ready Pose
+    arm_group.set_named_target("ready")
+    arm_group.go(wait=True)
+    arm_group.stop()
+    arm_group.clear_pose_targets()
+
     # Pre grasp pose
     object_at = pick_pose.pose.position.z
     pick_pose.pose.position.z = object_at + 0.3
@@ -149,6 +148,8 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
     gripper_group.stop()
     gripper_group.clear_pose_targets()
 
+    scene.remove_attached_object("J6", name=f"part_{object_id}")
+
     # Return to the ready position
 
     arm_group.set_named_target("rest")
@@ -157,8 +158,8 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
     arm_group.clear_pose_targets()
 
     delete_model(f"cylinder_{object_id}")
-    scene.remove_attached_object("J6", name=f"part_{object_id}")
     scene.remove_world_object(f"part_{object_id}")
+    
 
 def motion_commander(cylinder_pose):
     # Initialize the moveit_commander
@@ -196,26 +197,12 @@ def motion_commander(cylinder_pose):
         pose.pose.position.y = p[1]
         pose.pose.position.z = p[2]
 
-        # Create a rotation matrix that points Z-axis downward
-        rotation_matrix = np.array([
-        [1, 0, 0],
-        [0, -1, 0],
-        [0, 0, -1]
-        ])
-
-        # Create a 4x4 transformation matrix
-        transform_matrix = np.eye(4)
-        transform_matrix[:3, :3] = rotation_matrix
-
-        # Convert rotation matrix to quaternion
-        quaternion = tft.quaternion_from_matrix(transform_matrix)
-
-        pose.pose.orientation.x = quaternion[0]
-        pose.pose.orientation.y = quaternion[1]
-        pose.pose.orientation.z = quaternion[2]
-        pose.pose.orientation.w = quaternion[3]
-
         pose = transform_pose(pose, "powder_box", "world")
+
+        pose.pose.orientation.x = 0.0
+        pose.pose.orientation.y = 1.0
+        pose.pose.orientation.z = 0.0
+        pose.pose.orientation.w = 0.0
 
         target_pose = PoseStamped()
         target_pose.header.frame_id = "world"
@@ -229,8 +216,13 @@ def motion_commander(cylinder_pose):
 
         motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group, scene=scene, robot=robot)  
 
+        # if idx%9 == 0:
+            # decrease the height of the sandbox model in gazebo by 0.025
+        
+
     # Stop the moveit_commander
     moveit_commander.roscpp_shutdown()
+    rospy.signal_shutdown("Motion Completed")
 
 
 if __name__ == "__main__":
