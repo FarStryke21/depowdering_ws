@@ -65,48 +65,6 @@ def spawn_cylinder_in_gazebo(part_id, pose, size):
 
     # rospy.sleep(0.5)  # Increase sleep duration between spawning cylinders
 
-def create_sandbox(length, width, height, pose):
-    sandbox_sdf = f"""
-        <sdf version="1.6">
-            <model name="sandbox">
-                <static>true</static>
-                <link name="link">
-                    <pose>0 0 {height/2} 0 0 0</pose> <!-- Center the link at the bottom face -->
-                    <inertial>
-                        <mass>1000.0</mass>
-                        <inertia>
-                            <ixx>1.0</ixx>
-                            <iyy>1.0</iyy>
-                            <izz>1.0</izz>
-                        </inertia>
-                    </inertial>
-                    <visual name="visual">
-                        <geometry>
-                            <box>
-                                <size>{length} {width} {height}</size>
-                            </box>
-                        </geometry>
-                        <material>
-                            <ambient>0.75 0.75 0.75 1</ambient> <!-- Light grey ambient color -->
-                            <diffuse>0.75 0.75 0.75 1</diffuse> <!-- Light grey diffuse color -->
-                        </material>
-                    </visual>
-                </link>
-            </model>
-        </sdf>
-        """
-
-    robot_height = 0.096  # Adjust this value as needed
-    pose.position.z += robot_height  # Adjust the height to avoid collision with the robot
-
-    pose_stamped = PoseStamped()
-    pose_stamped.header.frame_id = "world"
-    pose_stamped.pose = pose
-
-    rospy.wait_for_service('/gazebo/spawn_sdf_model')
-    spawn_model_prox = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
-    spawn_model_prox(model_name="sandbox", model_xml=sandbox_sdf, robot_namespace="", initial_pose=pose, reference_frame="world")
-
 def transform_pose(input_pose, from_frame, to_frame):
     tf_buffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tf_buffer)
@@ -167,18 +125,6 @@ def read_csv_and_add_objects(file_path):
                 # print(f"Added cylinder {part_id} in Gazebo at transformed pose.")
 
             rospy.sleep(0.1)  # Short pause to ensure proper object creation
-
-    length = 0.3
-    width = 0.3
-    height = 0.1
-
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = "powder_box"
-    box_pose.pose.position.x = 0
-    box_pose.pose.position.y = 0
-    box_pose.pose.position.z = 0
-    box_transformed_pose = transform_pose(box_pose, "powder_box", "world")
-    create_sandbox(length, width, height, box_transformed_pose.pose)
 
 if __name__ == '__main__':
     try:
