@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 
 import rospy
-import numpy as np
 import moveit_commander
 from geometry_msgs.msg import PoseStamped
 import tf2_ros
 import tf2_geometry_msgs
-import tf.transformations as tft
-from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
+from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 import sys
 import pandas as pd
-from gazebo_msgs.srv import DeleteModel
-from gazebo_msgs.srv import DeleteModelRequest
-from gazebo_msgs.srv import SpawnModel
-
+from gazebo_msgs.srv import DeleteModel, DeleteModelRequest, SpawnModel
 
 def transform_pose(input_pose, from_frame, to_frame):
     tf_buffer = tf2_ros.Buffer()

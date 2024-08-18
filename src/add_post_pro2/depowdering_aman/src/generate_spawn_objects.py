@@ -1,15 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import rospy
 import csv
 from moveit_commander import RobotCommander, PlanningSceneInterface
-from geometry_msgs.msg import PoseStamped, TransformStamped
-from tf.transformations import quaternion_from_euler, quaternion_multiply, quaternion_inverse
+from geometry_msgs.msg import PoseStamped
 import tf2_ros
 import tf2_geometry_msgs
 from gazebo_msgs.srv import SpawnModel
-from gazebo_msgs.msg import ModelState
-from std_msgs.msg import ColorRGBA
 
 def create_collision_object(scene, part_id, pose, size):
     object_id = f"part_{part_id}"
