@@ -1,0 +1,13 @@
+{
+    "name": "depowdering-env",
+    "dockerFile": "../Docker/Dockerfile",
+    "context": "..",
+    "remoteUser": "vscode",
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+      "ms-python.python",
+    ]
+  }
+  
