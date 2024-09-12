@@ -115,9 +115,10 @@ def delete_model(model_name):
     except rospy.ServiceException as e:
         rospy.logerr(f"Service call failed: {e}")
 
-def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, target_pose=None, arm_group=None, gripper_group=None):
+def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, target_pose=None, arm_group=None, gripper_group=None, sim = True):
     arm_group.set_start_state_to_current_state()
-    gripper_group.set_start_state_to_current_state()
+    if sim:
+        gripper_group.set_start_state_to_current_state()
 
     # Ready Pose
     arm_group.set_named_target("ready")
@@ -145,11 +146,12 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
 
     # Close the gripper
     # rospy.loginfo("Closing Gripper")
-    gripper_group.set_named_target("pick")
-    gripper_group.go(wait=True)
-    gripper_group.stop()
-    gripper_group.clear_pose_targets()
-    attach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
+    if sim:
+        gripper_group.set_named_target("pick")
+        gripper_group.go(wait=True)
+        gripper_group.stop()
+        gripper_group.clear_pose_targets()
+        attach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
     touch_links = robot.get_link_names()
     scene.attach_cylinder("J6", f"part_{object_id}", touch_links=touch_links)
 
@@ -176,11 +178,12 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
 
     # Open the gripper
     # rospy.loginfo("Opening Gripper")
-    detach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
-    gripper_group.set_named_target("release")
-    gripper_group.go(wait=True)
-    gripper_group.stop()
-    gripper_group.clear_pose_targets()
+    if sim:
+        detach_object(model1="add_post_pro_depowdering", link1="gripper_Link", model2=f"cylinder_{object_id}", link2="link")
+        gripper_group.set_named_target("release")
+        gripper_group.go(wait=True)
+        gripper_group.stop()
+        gripper_group.clear_pose_targets()
 
     scene.remove_attached_object("J6", name=f"part_{object_id}")
 
@@ -191,11 +194,12 @@ def motion_planner(scene = None, robot = None, object_id = 0, pick_pose=None, ta
     arm_group.stop()
     arm_group.clear_pose_targets()
 
-    delete_model(f"cylinder_{object_id}")
+    if sim:
+        delete_model(f"cylinder_{object_id}")
     scene.remove_world_object(f"part_{object_id}")
     
 
-def motion_commander(cylinder_pose):
+def motion_commander(cylinder_pose, sim = True):
     # Initialize the moveit_commander
     moveit_commander.roscpp_initialize(sys.argv)
 
@@ -207,35 +211,41 @@ def motion_commander(cylinder_pose):
 
     # Initialize the move group commander
     arm_group = moveit_commander.MoveGroupCommander("arm")
-    gripper_group = moveit_commander.MoveGroupCommander("gripper")
+    if sim:
+        gripper_group = moveit_commander.MoveGroupCommander("gripper")
+    else:
+        gripper_group = None
 
     # Set the reference frame for the arm group
     arm_group.set_pose_reference_frame("base_link")
-    gripper_group.set_pose_reference_frame("base_link")
+    if sim:
+        gripper_group.set_pose_reference_frame("base_link")
 
     rospy.loginfo("Enter Ready Position")
     arm_group.set_named_target("rest")
     arm_group.go(wait=True)
     arm_group.stop()
     arm_group.clear_pose_targets()
-    gripper_group.set_named_target("release")
-    gripper_group.go(wait=True)
-    gripper_group.stop()
-    gripper_group.clear_pose_targets()
+    if sim:
+        gripper_group.set_named_target("release")
+        gripper_group.go(wait=True)
+        gripper_group.stop()
+        gripper_group.clear_pose_targets()
 
     # Create a sandbox model in gazebo
-    length = 0.3
-    width = 0.3
-    height = 0.1
-    robot_height = 0.096  # Adjust this value as needed
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = "powder_box"
-    box_pose.pose.position.x = 0
-    box_pose.pose.position.y = 0
-    box_pose.pose.position.z = 0
-    box_transformed_pose = transform_pose(box_pose, "powder_box", "world")
-    box_transformed_pose.pose.position.z += robot_height  # Adjust the height to avoid collision with the robot
-    create_sandbox(length, width, height, box_transformed_pose.pose)
+    if sim:
+        length = 0.3
+        width = 0.3
+        height = 0.1
+        robot_height = 0.096  # Adjust this value as needed
+        box_pose = PoseStamped()
+        box_pose.header.frame_id = "powder_box"
+        box_pose.pose.position.x = 0
+        box_pose.pose.position.y = 0
+        box_pose.pose.position.z = 0
+        box_transformed_pose = transform_pose(box_pose, "powder_box", "world")
+        box_transformed_pose.pose.position.z += robot_height  # Adjust the height to avoid collision with the robot
+        create_sandbox(length, width, height, box_transformed_pose.pose)
 
     input("Start Motion...")
 
@@ -264,9 +274,9 @@ def motion_commander(cylinder_pose):
         target_pose.pose.orientation.z = 0.0
         target_pose.pose.orientation.w = 0.0
 
-        motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group, scene=scene, robot=robot)  
+        motion_planner(object_id=idx, pick_pose=pose, target_pose=target_pose, arm_group=arm_group, gripper_group=gripper_group, scene=scene, robot=robot, sim = sim)  
 
-        if idx%9 == 0:
+        if sim and idx%9 == 0:
             rospy.loginfo("Simulating Vacuuming Process...")
             delete_model("sandbox")
             rospy.sleep(1)
@@ -280,6 +290,8 @@ def motion_commander(cylinder_pose):
 
 if __name__ == "__main__":
     # setup a global variable to trigger the callback
+    sim_mode = rospy.get_param('sim', True)
+
     trigger = False
     rospy.init_node('trajectory_commander', anonymous=True)
     file_path = rospy.get_param('object_pose_file', '/home/aman/Desktop/test_config.csv')
@@ -288,5 +300,5 @@ if __name__ == "__main__":
     cylinder_pose = df[['px', 'py', 'pz', 'ox', 'oy', 'oz', 'ow']].values
     # Transform the pose from the powder_box to the world frame
 
-    motion_commander(cylinder_pose)
+    motion_commander(cylinder_pose, sim = sim_mode)
     rospy.spin()

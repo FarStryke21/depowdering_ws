@@ -19,7 +19,7 @@ class AddObjectInPlanningScene:
         moveit_commander.roscpp_initialize(sys.argv)
         rospy.init_node("add_object_in_planning_gripper_scene",anonymous=True)
         group_name = "arm"
-        self.move_group = moveit_commander.MoveGroupCommander(group_name)
+        self.move_group = moveit_commander.MoveGroupCommander(group_name, wait_for_servers=60.0)
         self.planning_scene_interface = moveit_commander.PlanningSceneInterface()
         self.ros_package = rospkg.RosPack()
 

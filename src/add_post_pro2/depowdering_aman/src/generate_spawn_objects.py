@@ -76,7 +76,7 @@ def transform_pose(input_pose, from_frame, to_frame):
 
 def read_csv_and_add_objects(file_path):
     rospy.init_node('cylinder_collision_generator', anonymous=True)
-
+    sim_mode = rospy.get_param('sim', True)
     scene = PlanningSceneInterface()
     robot = RobotCommander()
 
@@ -116,7 +116,7 @@ def read_csv_and_add_objects(file_path):
 
             # Transform pose from powder_box to world frame for Gazebo
             transformed_pose = transform_pose(pose, "powder_box", "world")
-            if transformed_pose:
+            if transformed_pose and sim_mode:
                 # Spawn the cylinder in Gazebo with blue color
                 spawn_cylinder_in_gazebo(part_id, transformed_pose.pose, size)
                 # print(f"Added cylinder {part_id} in Gazebo at transformed pose.")

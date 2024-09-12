@@ -57,6 +57,7 @@ add_post_pro_depowdering:
         i: 1
         i_clamp: 1
 
+controller_manager_ns: controller_manager
 controller_list:
   - name: "/add_post_pro_depowdering/arm_controller"
     action_ns: follow_joint_trajectory
